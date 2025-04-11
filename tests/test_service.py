@@ -1,5 +1,6 @@
 """
-This is a test service that will be used to test the message service layer
+Test the message service by sending a message to it and checking the response.
+This test checks if the message service correctly processes a message and ignores empty messages.
 """
 
 import os
