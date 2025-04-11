@@ -19,8 +19,11 @@ async def run():
 
         # Define a callback for incoming messages
         async def message_handler(msg):
-            print(f"[NATS] Received on '{msg.subject}': {msg.data.decode()}")
-            process_message(msg.data)
+            try:
+                print(f"[NATS] Received on '{msg.subject}': {msg.data.decode()}")
+                process_message(msg.data)
+            except Exception as e:
+                print("ERROR in message_handler:", e)
 
         # Subscribe to a subject
         await nc.subscribe("updates.messages", cb=message_handler)
