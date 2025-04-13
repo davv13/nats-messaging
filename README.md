@@ -150,6 +150,128 @@ Use this SQL query:
 ```sql
 SELECT * FROM messages;
 ```
+
+---
+
+Absolutely Davit! Here's a clean, detailed, and production-quality **markdown block** you can copy into your `README.md` to guide **any user** through running your app using Docker and Docker Compose.
+
+---
+
+## 🐳 Runing the Application with Docker Compose
+
+This version is fully containerized — no manual setup is needed.  
+Just follow these steps to run the application using **Docker Compose**.
+
+---
+
+### 🔧 1. Install Prerequisites
+
+Make sure you have the following installed:
+
+- **Docker (https://docs.docker.com/get-docker/)**
+- **Docker Compose (https://docs.docker.com/compose/install/)**
+
+---
+
+### 📦 2. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/nats-messaging.git
+cd nats-messaging
+```
+
+---
+
+### 3. Create the `.env` File
+
+Create a file called `.env` in the **project root directory** (alongside `docker-compose.yml`) and paste the following:
+
+```env
+# PostgreSQL Configuration
+DB_NAME=nats_messages_db
+DB_USER=postgres
+DB_PASSWORD=your_password_here
+DB_HOST=localhost
+DB_PORT=5432
+
+# NATS Server Configuration
+NATS_URL=nats://localhost:4222
+```
+
+> 🔒 Don't commit this file to GitHub. It should be **private** and is already listed in `.gitignore`.
+
+---
+
+### 📄 4. Project Structure (Key Files)
+
+```bash
+nats-messaging/
+├── README.md
+├── docker-compose.yml
+├── .env
+├── requirements.txt
+├── .gitignore
+├── nats_messaging/
+│   ├── dockerfile
+│   ├── main.py
+│   ├── config.py
+│   ├── api/
+│   │   └── nats_subscriber.py
+│   ├── service/
+│   │   └── message_service.py
+│   └── data/
+│       └── message_repository.py
+```
+
+---
+
+### 🚀 5. Run the Application
+
+Run this from the **project root** (where `docker-compose.yml` is):
+
+```bash
+docker-compose up --build
+```
+
+You will see output like:
+
+```bash
+✨ Starting NATS Messaging CLI App...
+
+[NATS] Connected to nats://localhost:4222
+[NATS] Subscribed to subject 'updates.messages'
+
+💬 Type a message to publish to 'updates.messages' (type 'exit' to quit):
+📤 >
+```
+
+---
+
+### 💬 6. Interact with the App
+
+Now just type any message in the terminal and press Enter. You should see:
+
+```bash
+✅ Message processed and saved.
+```
+
+Your message is saved in the PostgreSQL database automatically via the 3-layered architecture (API → Service → Data).
+
+---
+
+### 🛑 7. Stop the App
+
+When you're done, press:
+
+```
+Ctrl + C
+```
+
+Then clean up with:
+
+```bash
+docker-compose down
+```
 ---
 ### 🧩 How It Works Internally
 
