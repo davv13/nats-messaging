@@ -1,9 +1,6 @@
 """
 API Layer: Subscribes to the NATS subject and processes incoming messages.
 """
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import asyncio
 from nats.aio.client import Client as NATS
@@ -13,11 +10,9 @@ async def run():
     nc = NATS()
 
     try:
-        # Connect to local NATS server
         await nc.connect("nats://localhost:4222")
         print("[NATS] Connected to nats://localhost:4222")
 
-        # Define a callback for incoming messages
         async def message_handler(msg):
             try:
                 print(f"[NATS] Received on '{msg.subject}': {msg.data.decode()}")
@@ -25,11 +20,9 @@ async def run():
             except Exception as e:
                 print("ERROR in message_handler:", e)
 
-        # Subscribe to a subject
         await nc.subscribe("updates.messages", cb=message_handler)
         print("[NATS] Subscribed to subject 'updates.messages'")
 
-        # Keep running
         while True:
             await asyncio.sleep(1)
 
@@ -37,6 +30,3 @@ async def run():
         print("[NATS] Connection error:", e)
     finally:
         await nc.drain()
-
-if __name__ == "__main__":
-    asyncio.run(run())
