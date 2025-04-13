@@ -23,18 +23,17 @@ This is a complete 3-layered Python application that:
   - `data/`  
     Manages direct communication with the PostgreSQL database (e.g., saving messages).
 
-  - `config.py`  
-    (Optional) Central place for storing database or server configuration variables.
-
   - `__init__.py`  
     Marks each subfolder as a Python package.
+
+  - `main.py`
+    Main entry point for the NATS Messaging CLI Application.
 
 - `tests/`  
   Contains test scripts for each layer of the system:
   
   - `test_save.py` – Directly tests saving to the database.
   - `test_service.py` – Tests message processing logic.
-  - `test_publish.py` – Publishes test messages to NATS.
 
 - `requirements.txt`  
   Python dependencies used in this project.
@@ -42,6 +41,8 @@ This is a complete 3-layered Python application that:
 - `README.md`  
   Full project documentation and setup instructions.
 
+- `.gitignore`
+  Anything that should be ignored.
 
 ---
 
@@ -100,7 +101,120 @@ Keep this terminal open while using the application.
 
 ## 🚀 Running the Application
 
-To be added
+This CLI application uses a modular 3-layered architecture to publish and persist messages through the NATS messaging system.
+
+### 🧠 Overview
+
+- Ensure that the NATS server is running locally.
+- You only run **`main.py`** — it acts as the CLI and the entry point to the system.
+- It publishes messages to the `NATS` server and waits for a response from the API Layer.
+- The rest of the processing (validation, DB saving) is handled **fully downstream** via the API → Service → Data layers.
+
+---
+
+### ✅ How to Run
+
+1. **Make sure PostgreSQL is running and the `nats_messages_db` is set up.**
+2. **Start the NATS server locally.**
+3. **Run the application with this in terminal:**
+
+```bash
+cd nats-messaging
+python -m nats_messaging.main
+```
+
+#### Use the CLI to send messages
+```bash
+💬 Type a message to publish to 'updates.messages' (type 'exit' to quit):
+📤 > Hello from NATS!
+✅ Message processed and saved.
+```
+
+If you enter an empty message
+```bash
+📤 >     
+⚠️  Message was ignored (empty or whitespace).
+```
+---
+
+### **How to Check**
+
+The valid message should appear in the messages table.
+Use pgAdmin to verify that the message was inserted into the messages table.
+
+Preconditions:
+- PostgreSQL must be running
+- The service and data layers must be functioning
+
+Use this SQL query:
+```sql
+SELECT * FROM messages;
+```
+---
+### 🧩 How It Works Internally
+
+1. `main.py`:
+   - Publishes the message to the NATS server using `await nc.publish(...)`
+   - Waits for a signal that the message was handled (via `asyncio.Event`)
+   - Receives the result (`True` or `False`) via `asyncio.Queue` and displays success/failure to the user
+
+2. `nats_subscriber.py` (API Layer):
+   - Subscribes to the NATS subject `'updates.messages'`
+   - Receives incoming messages and decodes them
+   - Passes the data to the **Service Layer** for business logic processing
+
+3. `message_service.py` (Service Layer):
+   - Decodes and validates the message content
+   - If valid, it calls `save_message()` in the **Data Layer**
+   - Returns a boolean indicating success or ignore
+
+4. `message_repository.py` (Data Layer):
+   - Connects to PostgreSQL and inserts the message with a timestamp
+
+---
+
+### **📦 NATS Messaging System – Layered Architecture Flow**
+```bash
+┌──────────────────────────────────────┐
+│          USER (CLI Input)            │
+│    Types a message in the terminal   │
+└────────────────┬─────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────┐
+│            main.py (CLI)             │
+│ - Publishes message to NATS          │
+│ - await nc.publish(..., message)     │
+└────────────────┬─────────────────────┘
+                 │
+                 ▼
+         NATS Server (Broker)
+                 │
+                 ▼
+┌──────────────────────────────────────┐
+│      nats_subscriber.py (API Layer)  │
+│ - Subscribes to 'updates.messages'   │
+│ - Receives msg as msg.data (bytes)   │
+│ - Prints decoded content             │
+│ - Calls: process_message(msg.data)   │
+└────────────────┬─────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────┐
+│ message_service.py (Service Layer)   │
+│ - Decodes, strips, validates msg     │
+│ - If valid, calls: save_message()    │
+└────────────────┬─────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────┐
+│ message_repository.py (Data Layer)   │
+│ - Connects to PostgreSQL             │
+│ - INSERT INTO messages table         │
+│   (content, timestamp)               │
+└──────────────────────────────────────┘
+```
+
 
 ## ⚙️ Individual Component Testing
 
@@ -177,52 +291,4 @@ Preconditions:
 Use this SQL query:
 ```sql
 SELECT * FROM messages;
-```
-
-
-### 🔹 Test: `test_publish.py`
-
-> Ensure the NATS server is running before continuing with these steps.
-
-### Step 1: Start the NATS Subscriber
-
-In one terminal:
-
-```bash
-cd nats-messaging
-python -m nats_messaging.main
-```
-Expected output:
-```bash
-🚀 Starting NATS Messaging Subscriber...
-[NATS] Connected to nats://localhost:4222
-[NATS] Subscribed to subject 'updates.messages'
-
-```
-
-### Step 2: Publish a Test Message
-In a second terminal (keep subscriber running), run this:
-```bash
-cd nats-messaging
-python tests/test_publish.py
-```
-You'll be prompted to enter a message (I entered `Hi there!`):
-
-```bash
-💬 Enter the message to publish to 'updates.messages': Hi there!
-✅ Message sent: Hi there!
-```
-
-If you enter invalid input (e.g. no input), it will output like this:
-```bash
-💬 Enter the message to publish to 'updates.messages':  
-⚠️  Message is empty. Exiting.
-```
-
-**Expected Subscriber Output:**
-
-In the first terminal (subscriber), you should now see for the valid input:
-```bash
-[NATS] Received on 'updates.messages': Hi there!
-[DB] Message saved: Hi there!
 ```
