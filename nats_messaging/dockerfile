@@ -1,0 +1,17 @@
+# Use a small official Python image
+FROM python:3.10-slim
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Copy only requirements first (for Docker caching benefits)
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application source code
+COPY nats_messaging/ ./nats_messaging/
+
+# Run the CLI app using the module runner
+CMD ["python", "-m", "nats_messaging.main"]
