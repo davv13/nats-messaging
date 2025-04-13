@@ -72,7 +72,7 @@ CREATE TABLE messages (
 ```
 
 ---
-## 🚀 NATS Server Setup
+## 📤 NATS Server Setup
 
 ### 1. Download and Extract NATS Server
 
@@ -98,41 +98,11 @@ You should see output like:
 
 Keep this terminal open while using the application.
 
-## Till here is correct
+## 🚀 Running the Application
 
-## 🧪 Running the Application
+To be added
 
-> Ensure the NATS server is running before continuing with these steps.
-
-### Step 1: Start the NATS Subscriber
-
-In one terminal:
-
-```bash
-cd nats-messaging
-python nats_messaging/api/nats_subscriber.py
-```
-Expected output:
-```bash
-[NATS] Connected to nats://localhost:4222
-[NATS] Subscribed to subject 'updates.messages'
-```
-
-### Step 2: Publish a Test Message
-In a second terminal (keep subscriber running):
-```bash
-cd nats-messaging
-python tests/test_publish.py
-```
-
-Expected output (in the first terminal):
-```bash
-[NATS] Received on 'updates.messages': This is a test message from test_publish.py
-[DB] Message saved: This is a test message from test_publish.py
-```
-
-
-## 🧪 Individual Component Testing
+## ⚙️ Individual Component Testing
 
 ### 🔹 Test: `test_save.py`
 
@@ -209,3 +179,50 @@ Use this SQL query:
 SELECT * FROM messages;
 ```
 
+
+### 🔹 Test: `test_publish.py`
+
+> Ensure the NATS server is running before continuing with these steps.
+
+### Step 1: Start the NATS Subscriber
+
+In one terminal:
+
+```bash
+cd nats-messaging
+python -m nats_messaging.main
+```
+Expected output:
+```bash
+🚀 Starting NATS Messaging Subscriber...
+[NATS] Connected to nats://localhost:4222
+[NATS] Subscribed to subject 'updates.messages'
+
+```
+
+### Step 2: Publish a Test Message
+In a second terminal (keep subscriber running), run this:
+```bash
+cd nats-messaging
+python tests/test_publish.py
+```
+You'll be prompted to enter a message (I entered `Hi there!`):
+
+```bash
+💬 Enter the message to publish to 'updates.messages': Hi there!
+✅ Message sent: Hi there!
+```
+
+If you enter invalid input (e.g. no input), it will output like this:
+```bash
+💬 Enter the message to publish to 'updates.messages':  
+⚠️  Message is empty. Exiting.
+```
+
+**Expected Subscriber Output:**
+
+In the first terminal (subscriber), you should now see for the valid input:
+```bash
+[NATS] Received on 'updates.messages': Hi there!
+[DB] Message saved: Hi there!
+```
